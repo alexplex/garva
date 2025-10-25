@@ -2,6 +2,9 @@ import { JokeDeck } from "@/components/joke-deck";
 import { getAllJokes } from "@/lib/jokes";
 import Image from "next/image";
 
+// Force dynamic rendering to avoid build-time database connection
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   const jokes = await getAllJokes();
   const deckKey = jokes.map((joke) => joke.id).join("-");
