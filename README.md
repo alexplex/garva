@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<h1 align="center">Garva · Swipe for a laugh</h1>
+
+Garva is a Tinder-inspired joke deck that never runs out. The app keeps two joke cards stacked at all times, letting you swipe forward for a fresh punchline or back to revisit the previous one without any loading hiccups. Each joke pulls from a local SQLite database, is styled with a random dark pastel background, and includes placeholder vote buttons for future sentiment tracking.
+
+https://github.com/user-attachments/assets/placeholder
+
+## Features
+
+- **Endless swipe deck** – The deck recycles through the stored jokes, always preloading the next (or previous) card beneath the active one for a seamless “curtain reveal.”
+- **Bidirectional swiping** – Swiping left advances to a new random joke, swiping right rewinds to the last joke you saw. Drag direction previews the appropriate card underneath.
+- **Nuanced motion** – Framer Motion drives the card physics with natural springs while dragging is temporarily locked just long enough for the outgoing card to clear the screen.
+- **SQLite-backed content** – Prisma manages a simple `Joke` model and a seed script that loads 10 placeholder jokes so the deck always has material.
+- **Future-proof voting** – Font Awesome thumbs up/down buttons are rendered on both layers (disabled on the hidden card) ready for wiring into vote tracking later.
+
+## Tech Stack
+
+- [Next.js 16 (App Router)](https://nextjs.org/)
+- [React 19](https://react.dev/)
+- [Framer Motion 12](https://www.framer.com/motion/)
+- [Prisma ORM + SQLite](https://www.prisma.io/)
+- [Font Awesome React](https://fontawesome.com/docs/web/use-with/react/)
+- [Nunito](https://fonts.google.com/specimen/Nunito) via `next/font`
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 20+
+- npm 10+ (project uses npm lockfile)
+
+### Installation
+
+```bash
+npm install
+npm run db:push   # ensures prisma/dev.db matches schema
+node prisma/seed.js
+```
+
+### Running the app
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit `http://localhost:3000` and start swiping. Linting is available via `npm run lint`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── api/jokes/route.ts   # REST endpoint exposing all jokes
+│   ├── layout.tsx           # Nunito + global shell
+│   ├── page.tsx             # server component that loads jokes & renders the deck
+│   └── globals.css          # base styles & gradients
+├── components/
+│   └── joke-deck.tsx        # swipe logic, motion controls, voting UI
+└── lib/
+    ├── jokes.ts             # DB helpers
+    └── prisma.ts            # singleton Prisma client
 
-## Learn More
+prisma/
+├── schema.prisma            # Joke model definition
+├── seed.js                  # Seeds 10 placeholder jokes
+└── dev.db                   # SQLite database (ignored in git)
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Development Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Motion tuning:** `src/components/joke-deck.tsx` keeps track of the swipe direction and uses manual motion controls rather than variants so we can animate forward/backward symmetrically and lock drag while cards exit.
+- **Styling:** Tailwind utilities (via `@tailwindcss/postcss`) live in `globals.css`. Random background colors are generated per card and constrained to low RGB values (<180) for contrast with white text.
+- **Data flow:** `page.tsx` fetches jokes on the server with Prisma; the client component receives the entire list so no extra API roundtrip is needed during swipes.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Roadmap
 
-## Deploy on Vercel
+- Persist vote actions via API + Prisma migrations.
+- Build an admin dashboard to add/manage jokes.
+- Add device-friendly haptics/sounds and analytics around swipe patterns.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT © 2024 Garva Contributors
