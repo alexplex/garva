@@ -9,7 +9,7 @@
     "lint": "eslint",
     "db:seed": "prisma db seed",
     "db:push": "prisma db push",
-    "postinstall": "prisma generate"
+    "vercel-build": "prisma generate && prisma db push --accept-data-loss && next build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
