@@ -9,9 +9,14 @@ export type JokeRecord = {
 };
 
 export async function getAllJokes(): Promise<JokeRecord[]> {
-  const jokes = await prisma.joke.findMany({
-    orderBy: { id: "asc" },
-  });
+  try {
+    const jokes = await prisma.joke.findMany({
+      orderBy: { id: "asc" },
+    });
 
-  return jokes;
+    return jokes;
+  } catch (error) {
+    console.error("Error fetching jokes:", error);
+    return [];
+  }
 }

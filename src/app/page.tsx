@@ -7,6 +7,19 @@ export const dynamic = 'force-dynamic';
 
 export default async function Home() {
   const jokes = await getAllJokes();
+  
+  // Handle empty jokes gracefully
+  if (jokes.length === 0) {
+    return (
+      <main className="relative flex min-h-[100dvh] w-full items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-4">Inga skämt hittades</h1>
+          <p className="text-white/80">Det verkar som att databasen är tom. Kontakta administratören.</p>
+        </div>
+      </main>
+    );
+  }
+  
   const deckKey = jokes.map((joke) => joke.id).join("-");
 
   return (
