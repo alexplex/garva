@@ -63,18 +63,23 @@ export async function GET(request: NextRequest) {
         }
       : {};
 
+    // Validate sortBy to prevent SQL injection
+    const validSortFields = ["id", "upvotes", "downvotes", "createdAt"];
+    const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : "id";
+    const validatedSortOrder = sortOrder === "desc" ? "desc" : "asc";
+
     const jokes = await prisma.joke.findMany({
       where: whereClause,
       orderBy: {
-        [sortBy]: sortOrder,
+        [validatedSortBy]: validatedSortOrder,
       },
     });
 
     return NextResponse.json({ jokes });
   } catch (error) {
-    console.error("[api/admin/jokes]", error);
+    console.error("[api/admin/jokes] Error fetching jokes:", error);
     return NextResponse.json(
-      { error: "Failed to fetch jokes" },
+      { error: "Failed to fetch jokes", details: error instanceof Error ? error.message : String(error) },
       { status: 500 }
     );
   }
