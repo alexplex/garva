@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -7,37 +8,42 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     envVars: {
-      DATABASE_URL: process.env.DATABASE_URL ? "Set" : "Not set",
-      POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL ? "Set" : "Not set",
-      POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING ? "Set" : "Not set",
+      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Not set",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set (hidden)" : "Not set",
     },
   };
 
   try {
-    // Only import Prisma if we have the connection string
-    if (!process.env.POSTGRES_PRISMA_URL && !process.env.DATABASE_URL) {
-      diagnostics.error = "No database connection string found";
-      diagnostics.status = "❌ No connection string";
+    // Test connection
+    diagnostics.connectionTest = "Attempting connection...";
+    const { count, error: countError } = await supabase
+      .from('jokes')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      diagnostics.error = countError.message;
+      diagnostics.errorDetails = countError;
+      diagnostics.status = "❌ Connection error";
       return NextResponse.json(diagnostics);
     }
 
-    const { prisma } = await import("@/lib/prisma");
-
-    // Test connection
-    diagnostics.connectionTest = "Attempting connection...";
-    const count = await prisma.joke.count();
     diagnostics.jokeCount = count;
 
-    if (count > 0) {
-      const sample = await prisma.joke.findFirst();
-      diagnostics.sampleJoke = sample
-        ? {
-            id: sample.id,
-            contentLength: sample.content.length,
-            upvotes: sample.upvotes,
-            downvotes: sample.downvotes,
-          }
-        : null;
+    if (count && count > 0) {
+      const { data: sample, error: sampleError } = await supabase
+        .from('jokes')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (!sampleError && sample) {
+        diagnostics.sampleJoke = {
+          id: sample.id,
+          contentLength: sample.content.length,
+          upvotes: sample.upvotes,
+          downvotes: sample.downvotes,
+        };
+      }
     }
 
     diagnostics.status = "✅ All tests passed";

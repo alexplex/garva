@@ -1,20 +1,26 @@
-import { prisma } from "./prisma";
+import { supabase } from "./supabase";
 
 export type JokeRecord = {
   id: number;
   content: string;
   upvotes: number;
   downvotes: number;
-  createdAt: Date;
+  createdAt: string;
 };
 
 export async function getAllJokes(): Promise<JokeRecord[]> {
   try {
-    const jokes = await prisma.joke.findMany({
-      orderBy: { id: "asc" },
-    });
+    const { data: jokes, error } = await supabase
+      .from('jokes')
+      .select('*')
+      .order('id', { ascending: true });
 
-    return jokes;
+    if (error) {
+      console.error("Error fetching jokes:", error);
+      return [];
+    }
+
+    return jokes || [];
   } catch (error) {
     console.error("Error fetching jokes:", error);
     return [];
