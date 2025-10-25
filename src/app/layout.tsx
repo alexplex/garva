@@ -16,6 +16,9 @@ export const metadata: Metadata = {
   title: "Garva · Swipe for a laugh",
   description:
     "Garva serves an endless stream of lightweight jokes with a Tinder-style swipe deck.",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({

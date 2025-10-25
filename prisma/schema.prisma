@@ -6,13 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Joke {
   id        Int      @id @default(autoincrement())
-  content   String
+  content   String   @db.Text
   upvotes   Int      @default(0)
   downvotes Int      @default(0)
   createdAt DateTime @default(now())

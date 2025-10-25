@@ -36,3 +36,10 @@ body {
   background: rgba(255, 255, 255, 0.25);
   color: #05050c;
 }
+
+/* Admin selection color - more visible */
+.select-text ::selection,
+.select-text::selection {
+  background: #3b82f6;
+  color: #ffffff;
+}

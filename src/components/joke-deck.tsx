@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faThumbsDown, faThumbsUp } from "@fortawesome/free-solid-svg-icons";
@@ -25,7 +25,7 @@ type DeckState = {
   lastDirection: number;
 };
 
-const SWIPE_THRESHOLD = 140;
+const SWIPE_THRESHOLD = 80;
 
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -91,9 +91,16 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
   const [state, setState] = useState<DeckState>(() => initDeck(initialJokes));
   const controls = useAnimation();
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const [peekDirection, setPeekDirection] = useState<"forward" | "backward">(
     "forward"
   );
+
+  // Use a timeout to avoid ESLint warning about setState in effect
+  useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const ensureNextCard = useCallback(
     (currentState: DeckState) => {
@@ -212,14 +219,22 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
 
   if (!currentCard) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-black/30 text-white/70">
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-black/30 text-white/70">
         Garva needs at least one joke in the database. Add some and refresh.
       </div>
     );
   }
 
+  if (!isMounted) {
+    return (
+      <div className="flex h-[100dvh] w-full items-center justify-center bg-white">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-gray-800"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative h-screen w-full overflow-hidden">
+    <div className="relative h-[100dvh] w-full overflow-hidden">
       {backdropCard && (
         <article
           key={backdropCard.key}
@@ -270,11 +285,12 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
 
 function CardContent({ joke, muted }: { joke: DeckCard; muted?: boolean }) {
   return (
-    <div className="flex h-full flex-col px-6 py-10 sm:px-12 sm:py-16 select-none">
+    <div className="flex h-full min-h-[100dvh] flex-col px-6 py-10 sm:px-12 sm:py-16 select-none">
       <div className="flex flex-1 items-center justify-center text-center select-none">
-        <p className="text-3xl font-bold leading-tight sm:text-4xl select-none">
-          {joke.content}
-        </p>
+        <div 
+          className="text-3xl font-bold leading-tight sm:text-4xl select-none [&>p]:mb-4 [&>p:last-child]:mb-0"
+          dangerouslySetInnerHTML={{ __html: joke.content }}
+        />
       </div>
       <div className="flex justify-center pb-20">
         <VoteButtons 
