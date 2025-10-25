@@ -8,8 +8,11 @@ export const dynamic = 'force-dynamic';
 export default async function Home() {
   const jokes = await getAllJokes();
   
+  console.log(`[Homepage] Fetched ${jokes.length} jokes`);
+  
   // Handle empty jokes gracefully
   if (jokes.length === 0) {
+    console.error("[Homepage] No jokes found in database!");
     return (
       <main className="relative flex min-h-[100dvh] w-full items-center justify-center">
         <div className="text-center">
