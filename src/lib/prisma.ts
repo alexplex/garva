@@ -20,10 +20,10 @@ function createPrismaClient() {
   }
 
   const pool = new Pool({ connectionString });
-  const adapter = new PrismaNeon(pool);
+  const adapter = new PrismaNeon(pool as any);
 
   return new PrismaClient({
-    adapter: adapter as any,
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
   });
 }
