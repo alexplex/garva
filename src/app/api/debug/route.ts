@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -7,19 +6,28 @@ export async function GET() {
   const diagnostics: Record<string, unknown> = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    databaseUrl: process.env.DATABASE_URL ? "Set (hidden)" : "Not set",
+    envVars: {
+      DATABASE_URL: process.env.DATABASE_URL ? "Set" : "Not set",
+      POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL ? "Set" : "Not set",
+      POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING ? "Set" : "Not set",
+    },
   };
 
   try {
-    // Test 1: Can we connect to the database?
-    await prisma.$connect();
-    diagnostics.connection = "✅ Connected";
+    // Only import Prisma if we have the connection string
+    if (!process.env.POSTGRES_PRISMA_URL && !process.env.DATABASE_URL) {
+      diagnostics.error = "No database connection string found";
+      diagnostics.status = "❌ No connection string";
+      return NextResponse.json(diagnostics);
+    }
 
-    // Test 2: Can we count jokes?
+    const { prisma } = await import("@/lib/prisma");
+
+    // Test connection
+    diagnostics.connectionTest = "Attempting connection...";
     const count = await prisma.joke.count();
     diagnostics.jokeCount = count;
 
-    // Test 3: Can we fetch one joke?
     if (count > 0) {
       const sample = await prisma.joke.findFirst();
       diagnostics.sampleJoke = sample
@@ -35,15 +43,10 @@ export async function GET() {
     diagnostics.status = "✅ All tests passed";
   } catch (error) {
     diagnostics.error = error instanceof Error ? error.message : String(error);
-    diagnostics.errorStack = error instanceof Error ? error.stack : undefined;
+    diagnostics.errorName = error instanceof Error ? error.name : "Unknown";
+    diagnostics.errorStack = error instanceof Error ? error.stack?.split('\n').slice(0, 5) : undefined;
     diagnostics.status = "❌ Error occurred";
-  } finally {
-    await prisma.$disconnect();
   }
 
-  return NextResponse.json(diagnostics, {
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+  return NextResponse.json(diagnostics);
 }
