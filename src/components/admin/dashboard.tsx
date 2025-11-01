@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { JokeEditor } from "@/components/joke-editor";
 
 type Joke = {
   id: number;
@@ -134,12 +135,10 @@ export default function AdminDashboard() {
         <div className="bg-white rounded-lg shadow p-6 mb-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Lägg till nytt skämt</h2>
           <form onSubmit={handleCreateJoke}>
-            <textarea
-              value={newJoke}
-              onChange={(e) => setNewJoke(e.target.value)}
-              placeholder="Skriv in skämtets innehåll (stödjer flera stycken)"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 min-h-[120px]"
-              required
+            <JokeEditor
+              content={newJoke}
+              onChange={setNewJoke}
+              placeholder="Skriv in skämtets innehåll..."
             />
             <button
               type="submit"
@@ -175,8 +174,8 @@ export default function AdminDashboard() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
               >
                 <option value="id">ID</option>
-                <option value="upvotes">Gillningar</option>
-                <option value="downvotes">Ogillamarkeringar</option>
+                <option value="upvotes">Upvotes</option>
+                <option value="downvotes">Downvotes</option>
                 <option value="createdAt">Skapad datum</option>
               </select>
             </div>
@@ -218,10 +217,10 @@ export default function AdminDashboard() {
                       Innehåll
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Gillningar
+                      Upvotes
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                      Ogillamark.
+                      Downvotes
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
                       Åtgärder
@@ -237,12 +236,12 @@ export default function AdminDashboard() {
                             {joke.id}
                           </td>
                           <td className="px-6 py-4">
-                            <textarea
-                              value={editingJoke.content}
-                              onChange={(e) =>
-                                setEditingJoke({ ...editingJoke, content: e.target.value })
+                            <JokeEditor
+                              content={editingJoke.content}
+                              onChange={(html) =>
+                                setEditingJoke({ ...editingJoke, content: html })
                               }
-                              className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 min-h-[80px]"
+                              placeholder="Redigera skämtet..."
                             />
                           </td>
                           <td className="px-6 py-4">

@@ -13,11 +13,31 @@ const nunito = Nunito({
 });
 
 export const metadata: Metadata = {
-  title: "Garva · Swipe for a laugh",
+  title: "Garva · Sveriges roligaste skämt",
   description:
-    "Garva serves an endless stream of lightweight jokes with a Tinder-style swipe deck.",
+    "Browsa genom Sveriges roligaste skämt och rösta på dina favoriter!",
+  keywords: ["skämt", "humor", "roligt", "svenska skämt", "garva"],
+  authors: [{ name: "Garva" }],
+  metadataBase: new URL("https://garva.se"),
+  openGraph: {
+    title: "Garva · Sveriges roligaste skämt",
+    description: "Browsa genom Sveriges roligaste skämt och rösta på dina favoriter!",
+    url: "https://garva.se",
+    siteName: "Garva",
+    locale: "sv_SE",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Garva · Sveriges roligaste skämt",
+    description: "Browsa genom Sveriges roligaste skämt och rösta på dina favoriter!",
+  },
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 

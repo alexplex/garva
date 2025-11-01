@@ -102,6 +102,18 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
     return () => clearTimeout(timer);
   }, []);
 
+  // Update vote counts in the deck state
+  const updateJokeVotes = useCallback((jokeId: number, upvotes: number, downvotes: number) => {
+    setState((prev) => ({
+      ...prev,
+      timeline: prev.timeline.map(card => 
+        card.id === jokeId 
+          ? { ...card, upvotes, downvotes }
+          : card
+      ),
+    }));
+  }, []);
+
   const ensureNextCard = useCallback(
     (currentState: DeckState) => {
       let state = currentState;
@@ -242,7 +254,7 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
           style={{ backgroundColor: backdropCard.color, zIndex: 5 }}
           aria-hidden="true"
         >
-          <CardContent joke={backdropCard} muted />
+          <CardContent joke={backdropCard} muted onVoteUpdate={updateJokeVotes} />
         </article>
       )}
 
@@ -277,13 +289,17 @@ export function JokeDeck({ initialJokes }: { initialJokes: Joke[] }) {
           }
         }}
       >
-        <CardContent joke={currentCard} />
+        <CardContent joke={currentCard} onVoteUpdate={updateJokeVotes} />
       </motion.article>
     </div>
   );
 }
 
-function CardContent({ joke, muted }: { joke: DeckCard; muted?: boolean }) {
+function CardContent({ joke, muted, onVoteUpdate }: { 
+  joke: DeckCard; 
+  muted?: boolean;
+  onVoteUpdate?: (jokeId: number, upvotes: number, downvotes: number) => void;
+}) {
   return (
     <div className="flex h-full min-h-[100dvh] flex-col px-6 py-10 sm:px-12 sm:py-16 select-none">
       <div className="flex flex-1 items-center justify-center text-center select-none">
@@ -298,7 +314,8 @@ function CardContent({ joke, muted }: { joke: DeckCard; muted?: boolean }) {
           jokeId={joke.id}
           initialUpvotes={joke.upvotes} 
           initialDownvotes={joke.downvotes}
-          disabled={muted} 
+          disabled={muted}
+          onVoteUpdate={onVoteUpdate ? (upvotes, downvotes) => onVoteUpdate(joke.id, upvotes, downvotes) : undefined}
         />
       </div>
     </div>
@@ -309,12 +326,14 @@ function VoteButtons({
   jokeId,
   initialUpvotes, 
   initialDownvotes, 
-  disabled 
+  disabled,
+  onVoteUpdate,
 }: { 
   jokeId: number;
   initialUpvotes: number; 
   initialDownvotes: number; 
   disabled?: boolean;
+  onVoteUpdate?: (upvotes: number, downvotes: number) => void;
 }) {
   const [isAnimating, setIsAnimating] = useState(false);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -386,7 +405,13 @@ function VoteButtons({
           }),
         });
 
-        if (!response.ok) {
+        if (response.ok) {
+          const data = await response.json();
+          // Update the deck state with the confirmed vote counts from server
+          if (onVoteUpdate && data.upvotes !== undefined && data.downvotes !== undefined) {
+            onVoteUpdate(data.upvotes, data.downvotes);
+          }
+        } else {
           console.error("Failed to save vote to server");
         }
       } catch (error) {
