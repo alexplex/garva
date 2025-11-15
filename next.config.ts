@@ -5,6 +5,7 @@ const nextConfig: NextConfig = {
     serverComponentsExternalPackages: ['@prisma/client', 'prisma'],
   },
   outputFileTracingIncludes: {
+    '/': ['./node_modules/.prisma/client/libquery_engine-*'],
     '/api/**/*': ['./node_modules/.prisma/client/libquery_engine-*'],
   },
 };
