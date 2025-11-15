@@ -19,7 +19,7 @@
     "@fortawesome/fontawesome-svg-core": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
     "@fortawesome/react-fontawesome": "^3.1.0",
-    "@prisma/client": "^6.2.0",
+    "@prisma/client": "6.19.0",
     "@tiptap/pm": "^3.8.0",
     "@tiptap/react": "^3.8.0",
     "@tiptap/starter-kit": "^3.8.0",
@@ -36,7 +36,7 @@
     "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "16.0.0",
-    "prisma": "^6.2.0",
+    "prisma": "6.19.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "ws": "^8.18.3"
