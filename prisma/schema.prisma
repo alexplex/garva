@@ -1,0 +1,22 @@
+// Prisma schema for Neon PostgreSQL database
+// Migration-based workflow for production safety
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")       // Pooled connection for queries
+  directUrl = env("DIRECT_URL")         // Direct connection for migrations
+}
+
+model Joke {
+  id        Int      @id @default(autoincrement())
+  content   String   @db.Text
+  upvotes   Int      @default(0)
+  downvotes Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("jokes")
+}

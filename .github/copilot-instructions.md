@@ -1,9 +1,15 @@
+## Communication Style
+
+- **Be concise**: Avoid verbose explanations. Get to the point.
+- **No unsolicited documentation**: Only create documentation files when explicitly asked.
+- **Focus on code**: Prefer showing solutions through code rather than lengthy explanations.
+
 ## Project Overview
 
 - **Framework**: Next.js 16 (App Router, TypeScript) with React 19.
 - **UI**: Custom layout using Tailwind v4 (via `@tailwindcss/postcss`) and Nunito from `next/font`.
 - **Motion**: Framer Motion powers swipe gestures. We rely on `useAnimation` instead of `variants` so we can orchestrate manual springs and lock drag while a card exits.
-- **Data**: Prisma ORM with SQLite (`prisma/dev.db`). `node prisma/seed.js` loads 10 jokes for local dev.
+- **Data**: Prisma ORM with PostgreSQL. Local Postgres for dev, Neon for production. Use migrations, not `db push`.
 
 ## File Map & Responsibilities
 
@@ -41,18 +47,29 @@
 
 ## Database Workflow
 
-1. Update `prisma/schema.prisma`.
-2. Run `npm run db:push` (wraps `prisma db push` and `prisma generate`).
-3. Seed local data with `node prisma/seed.js`.
-4. Never commit `prisma/dev.db` (ignored in `.gitignore`).
+**Development (Local Postgres):**
+1. Ensure local Postgres is running (port 5432)
+2. Update `prisma/schema.prisma`
+3. Run `npm run db:migrate` to create migration
+4. Migration auto-applies to local DB
+5. Seed with `npm run db:seed`
+
+**Production (Neon):**
+1. Commit migration files to git
+2. Push to GitHub
+3. Vercel auto-runs migrations on deploy
+
+**Never use `db push` in production.** Always use migrations.
 
 ## Commands
 
 ```bash
-npm run dev       # start Next.js dev server
-npm run lint      # eslint
-npm run db:push   # sync Prisma schema + regenerate client
-node prisma/seed.js
+npm run dev          # start Next.js dev server
+npm run lint         # eslint
+npm run db:migrate   # create + apply migration (dev)
+npm run db:seed      # seed database
+npm run db:studio    # open Prisma Studio
+npm run db:reset     # wipe + rebuild (dev only!)
 ```
 
 ## Coding Conventions

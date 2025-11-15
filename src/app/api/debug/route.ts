@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -8,35 +8,22 @@ export async function GET() {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     envVars: {
-      NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? "Set" : "Not set",
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Set (hidden)" : "Not set",
+      DATABASE_URL: process.env.DATABASE_URL ? "Set (hidden)" : "Not set",
+      DIRECT_URL: process.env.DIRECT_URL ? "Set (hidden)" : "Not set",
     },
   };
 
   try {
     // Test connection
     diagnostics.connectionTest = "Attempting connection...";
-    const { count, error: countError } = await supabase
-      .from('jokes')
-      .select('*', { count: 'exact', head: true });
-
-    if (countError) {
-      diagnostics.error = countError.message;
-      diagnostics.errorDetails = countError;
-      diagnostics.status = "❌ Connection error";
-      return NextResponse.json(diagnostics);
-    }
+    const count = await prisma.joke.count();
 
     diagnostics.jokeCount = count;
 
-    if (count && count > 0) {
-      const { data: sample, error: sampleError } = await supabase
-        .from('jokes')
-        .select('*')
-        .limit(1)
-        .single();
+    if (count > 0) {
+      const sample = await prisma.joke.findFirst();
 
-      if (!sampleError && sample) {
+      if (sample) {
         diagnostics.sampleJoke = {
           id: sample.id,
           contentLength: sample.content.length,

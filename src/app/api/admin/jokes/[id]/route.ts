@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/prisma";
 
 export async function PUT(
   request: NextRequest,
@@ -34,26 +34,16 @@ export async function PUT(
       );
     }
 
-    const updateData: Record<string, unknown> = {
+    const updateData: { content: string; upvotes?: number; downvotes?: number } = {
       content: content.trim(),
     };
     if (upvotes !== undefined) updateData.upvotes = upvotes;
     if (downvotes !== undefined) updateData.downvotes = downvotes;
 
-    const { data: joke, error } = await supabase
-      .from('jokes')
-      .update(updateData)
-      .eq('id', jokeId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error("[api/admin/jokes/[id]] Update error:", error);
-      return NextResponse.json(
-        { error: "Failed to update joke" },
-        { status: 500 }
-      );
-    }
+    const joke = await prisma.joke.update({
+      where: { id: jokeId },
+      data: updateData,
+    });
 
     return NextResponse.json({ joke });
   } catch (error) {
@@ -88,18 +78,9 @@ export async function DELETE(
       );
     }
 
-    const { error } = await supabase
-      .from('jokes')
-      .delete()
-      .eq('id', jokeId);
-
-    if (error) {
-      console.error("[api/admin/jokes/[id]] Delete error:", error);
-      return NextResponse.json(
-        { error: "Failed to delete joke" },
-        { status: 500 }
-      );
-    }
+    await prisma.joke.delete({
+      where: { id: jokeId },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

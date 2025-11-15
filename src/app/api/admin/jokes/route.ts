@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAuthenticated } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,23 +21,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: joke, error } = await supabase
-      .from('jokes')
-      .insert({
+    const joke = await prisma.joke.create({
+      data: {
         content: content.trim(),
         upvotes: upvotes || 0,
         downvotes: downvotes || 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("[api/admin/jokes] Create error:", error);
-      return NextResponse.json(
-        { error: "Failed to create joke" },
-        { status: 500 }
-      );
-    }
+      },
+    });
 
     return NextResponse.json({ joke });
   } catch (error) {
@@ -65,28 +55,23 @@ export async function GET(request: NextRequest) {
     const sortOrder = searchParams.get("sortOrder") || "asc";
 
     // Validate sortBy to prevent SQL injection
-    const validSortFields = ["id", "upvotes", "downvotes", "createdAt"];
-    const validatedSortBy = validSortFields.includes(sortBy) ? sortBy : "id";
+    const validSortFields = ["id", "upvotes", "downvotes", "createdAt"] as const;
+    const validatedSortBy = validSortFields.includes(sortBy as typeof validSortFields[number]) 
+      ? (sortBy as typeof validSortFields[number])
+      : "id";
     const validatedSortOrder = sortOrder === "desc" ? "desc" : "asc";
 
-    let query = supabase
-      .from('jokes')
-      .select('*')
-      .order(validatedSortBy, { ascending: validatedSortOrder === 'asc' });
-
-    if (search) {
-      query = query.ilike('content', `%${search}%`);
-    }
-
-    const { data: jokes, error } = await query;
-
-    if (error) {
-      console.error("[api/admin/jokes] Error fetching jokes:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch jokes", details: error.message },
-        { status: 500 }
-      );
-    }
+    const jokes = await prisma.joke.findMany({
+      where: search ? {
+        content: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      } : undefined,
+      orderBy: {
+        [validatedSortBy]: validatedSortOrder,
+      },
+    });
 
     return NextResponse.json({ jokes });
   } catch (error) {

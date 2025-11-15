@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import prisma from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
@@ -34,13 +34,11 @@ export async function POST(
     }
 
     // Check if joke exists
-    const { data: joke, error: findError } = await supabase
-      .from('jokes')
-      .select('*')
-      .eq('id', jokeId)
-      .single();
+    const joke = await prisma.joke.findUnique({
+      where: { id: jokeId }
+    });
 
-    if (findError || !joke) {
+    if (!joke) {
       return NextResponse.json(
         { error: "Joke not found" },
         { status: 404 }
@@ -69,23 +67,13 @@ export async function POST(
     const newUpvotes = joke.upvotes + upvoteDelta;
     const newDownvotes = joke.downvotes + downvoteDelta;
 
-    const { data: updatedJoke, error: updateError } = await supabase
-      .from('jokes')
-      .update({
+    const updatedJoke = await prisma.joke.update({
+      where: { id: jokeId },
+      data: {
         upvotes: newUpvotes,
         downvotes: newDownvotes,
-      })
-      .eq('id', jokeId)
-      .select()
-      .single();
-
-    if (updateError || !updatedJoke) {
-      console.error("[api/jokes/vote] Update error:", updateError);
-      return NextResponse.json(
-        { error: "Unable to process vote" },
-        { status: 500 }
-      );
-    }
+      },
+    });
 
     return NextResponse.json({
       success: true,
